@@ -8,3 +8,4 @@ seaborn==0.13.2
 matplotlib==3.10.8
 pyenergyplus-lbnl==25.2
 nbstripout==0.9.1
+optuna

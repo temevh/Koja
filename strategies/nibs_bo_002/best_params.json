@@ -1,0 +1,12 @@
+{
+  "htg_margin": 1.189356845174156,
+  "clg_margin": 1.2657297487147434,
+  "night_htg_setback": 0.9628042393176848,
+  "supply_temp_low": 18.375860199797156,
+  "supply_temp_high": 16.84036603501915,
+  "occupied_flow": 0.39726114574289484,
+  "unoccupied_flow": 0.10938143986226799,
+  "co2_boost_threshold": 415.10622995478803,
+  "nightflush_delta": 3.6509818063367536,
+  "nightflush_flow": 0.43462748044065236
+}

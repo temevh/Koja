@@ -76,3 +76,57 @@
 2026-04-08 13:48:36 | INFO     | Output path: vesa_3_output/train
 2026-04-08 13:48:37 | WARNING  | Some meter handles were not found: ['elec_facility']
 2026-04-08 13:48:37 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:55:53 | INFO     | ---------- reset -----------
+2026-04-08 13:55:53 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:55:54 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:55:54 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:55:54 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:55:54 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:55:54 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:55:54 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:55:54 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:55:54 | INFO     | EnergyPlus handles initialized
+2026-04-08 14:01:25 | INFO     | ---------- reset -----------
+2026-04-08 14:01:25 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 14:01:26 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 14:01:26 | INFO     | Starting new EnergyPlus run
+2026-04-08 14:01:26 | INFO     | Starting EnergyPlus simulation
+2026-04-08 14:01:26 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 14:01:26 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 14:01:26 | INFO     | Output path: vesa_3_output/train
+2026-04-08 14:01:26 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 14:01:26 | INFO     | EnergyPlus handles initialized
+2026-04-08 14:06:48 | INFO     | ---------- reset -----------
+2026-04-08 14:06:48 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 14:06:49 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 14:06:49 | INFO     | Starting new EnergyPlus run
+2026-04-08 14:06:49 | INFO     | Starting EnergyPlus simulation
+2026-04-08 14:06:49 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 14:06:49 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 14:06:49 | INFO     | Output path: vesa_3_output/train
+2026-04-08 14:06:49 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 14:06:49 | INFO     | EnergyPlus handles initialized
+2026-04-08 14:24:18 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 14:24:18 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 14:24:19 | INFO     | ---------- reset -----------
+2026-04-08 14:24:19 | INFO     | Starting new EnergyPlus run
+2026-04-08 14:24:19 | INFO     | Starting EnergyPlus simulation
+2026-04-08 14:24:19 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 14:24:19 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 14:24:19 | INFO     | Output path: vesa_3_output/eval
+2026-04-08 14:24:19 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 14:24:19 | INFO     | EnergyPlus handles initialized
+2026-04-08 14:24:45 | INFO     | Closing EnergyPlusEnv
+2026-04-08 14:24:46 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 14:28:10 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 14:28:10 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 14:28:10 | INFO     | ---------- reset -----------
+2026-04-08 14:28:10 | INFO     | Starting new EnergyPlus run
+2026-04-08 14:28:10 | INFO     | Starting EnergyPlus simulation
+2026-04-08 14:28:10 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 14:28:10 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 14:28:10 | INFO     | Output path: vesa_3_output/eval
+2026-04-08 14:28:11 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 14:28:11 | INFO     | EnergyPlus handles initialized
+2026-04-08 14:28:37 | INFO     | Closing EnergyPlusEnv
+2026-04-08 14:28:38 | INFO     | EnergyPlus finished with exit code 0
