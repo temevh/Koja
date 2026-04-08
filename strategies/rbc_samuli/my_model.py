@@ -83,8 +83,8 @@ class MyModel:
             controller.update(outdoor_temp)
         self.prev_hour = hour
 
-        heating_setpoint = controller.get_lower() + 0.7
-        cooling_setpoint = controller.get_upper() - 0.7
+        heating_setpoint = controller.get_lower() + 0.6
+        cooling_setpoint = controller.get_upper() - 0.1
         #print(f"heating: {heating_setpoint}, cooling: {cooling_setpoint}")
         #supply_air_temp = 18.0
         if zone_temp < heating_setpoint + 0.1:
@@ -95,11 +95,11 @@ class MyModel:
             supply_air_temp = 18.5  # Neutral
 
 
-        if co2_concentration >= CO2_THRESHOLDS[0] - 100:
+        if co2_concentration >= CO2_THRESHOLDS[0] - 50:
             fan_flow_rate = 1.0
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 300:
+        elif co2_concentration >= CO2_THRESHOLDS[0] - 125:
             fan_flow_rate = 0.6
         else:
-            fan_flow_rate = 0.01
+            fan_flow_rate = 0.00
 
         return heating_setpoint, cooling_setpoint, supply_air_temp, fan_flow_rate
