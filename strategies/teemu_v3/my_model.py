@@ -74,7 +74,7 @@ CO2_THRESHOLDS = [770, 970, 1220]
 
 # ── Unoccupied detection ───────────────────────────────────────────────────
 CO2_EMPTY_THRESHOLD = 420  # ppm — below this, building is likely empty
-UNOCCUPIED_SETBACK  = 1.0  # °C wider dead band when empty
+UNOCCUPIED_SETBACK  = 2.0  # °C wider dead band when empty
 
 
 controller = TemperatureTargeter()
@@ -115,19 +115,18 @@ class MyModel:
         # When return air is cool → supply warm air (gas heating)
         # In neutral zone → avoid unnecessary gas heating
         if zone_temp < heating_setpoint + 0.1:
-            supply_air_temp = 21.0          # max heating
+            supply_air_temp = 19.5          # max heating
         elif zone_temp > cooling_setpoint - 0.1:
             supply_air_temp = 16.0          # max cooling
         else:
             # Neutral: compensate based on return air
-            # BO best params: supply_temp_low=18.4 (ret≤20), high=16.8 (ret≥26)
             if return_air_temp <= 20.0:
-                supply_air_temp = 18.5
+                supply_air_temp = 17.0
             elif return_air_temp >= 26.0:
-                supply_air_temp = 16.8
+                supply_air_temp = 16.5
             else:
                 frac = (return_air_temp - 20.0) / 6.0
-                supply_air_temp = 18.5 + frac * (16.8 - 18.5)
+                supply_air_temp = 17.0 + frac * (16.5 - 17.0)
 
         # ── 4. CO2 fan control — Samuli's exact staircase ─────────────────
         # Proven to achieve €4 CO2 penalty. Fine-grained ramp prevents
@@ -172,6 +171,8 @@ class MyModel:
             fan_flow_rate = 0.10
         elif co2_concentration >= CO2_THRESHOLDS[0] - 250:  # 520
             fan_flow_rate = 0.05
+        elif co2_concentration >= 570:
+            fan_flow_rate = 0.02
         else:
             fan_flow_rate = 0.00
 

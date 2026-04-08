@@ -1,5 +1,5 @@
 ╔══════════════════════════════════════════╗
-║  Total Cost Summary — Teemu        ║
+║  Total Cost Summary — RBC_Samuli        ║
 ╠══════════════════════════════════════════╣
 ║  Energy cost:             6854.55 €    ║
 ║  CO2 penalty:                4.00 €    ║

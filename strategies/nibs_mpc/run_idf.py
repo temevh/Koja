@@ -16,8 +16,8 @@ from pyenergyplus.api import EnergyPlusAPI
 from energyplus_controller import EnergyPlusController
 
 # --- Paths (relative to this strategy directory) ---
-IDF_FILE = Path(r"../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
-EPW_FILE = Path(r"../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
+IDF_FILE = Path(r"../../BUILDINGMODEL_TEST.idf")
+EPW_FILE = Path(r"../../WEATHER_TEST.epw")
 OUT_DIR = Path(r"eplus_out")
 
 
