@@ -30,16 +30,6 @@ import gymnasium as gym
 import numpy as np
 from gymnasium.spaces import Box
 
-if "ENERGYPLUS_DIR" in os.environ:
-    ENERGYPLUS_DIR = os.environ["ENERGYPLUS_DIR"]
-elif sys.platform == "darwin":  # macOS
-    ENERGYPLUS_DIR = "/Applications/EnergyPlus-25-2-0"
-elif sys.platform == "linux":   # Colab / Ubuntu
-    ENERGYPLUS_DIR = "/usr/local/EnergyPlus-25-2-0"
-else:
-    ENERGYPLUS_DIR = r"C:\EnergyPlusV25-2-0"
-sys.path.append(ENERGYPLUS_DIR)
-
 from pyenergyplus.api import EnergyPlusAPI
 
 from logger_eplus import logger
