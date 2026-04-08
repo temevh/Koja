@@ -39,8 +39,10 @@ def _load_surrogate(models_dir: Path, backend: str):
 class MPCModel:
     """Model Predictive Controller using learned dynamics + CEM."""
 
-    # Lighter CEM defaults for LightGBM (CPU-bound, no batched GPU)
     _LGBM_DEFAULTS = dict(horizon=4, n_samples=200, n_elite=20, n_iterations=3)
+    _FAST_DEFAULTS = dict(horizon=15, n_samples=200, n_elite=10, n_iterations=1)
+    # _FAST_DEFAULTS = dict(horizon=2, n_samples=120, n_elite=15, n_iterations=1)
+
 
     def __init__(
         self,
@@ -50,9 +52,14 @@ class MPCModel:
         n_elite: int | None = None,
         n_iterations: int | None = None,
         backend: str = "nn",
+        fast: bool = False,
+        replan_interval: int = 1,
     ) -> None:
         # Apply backend-specific defaults
-        if backend == "lgbm":
+        if fast:
+            defaults = self._FAST_DEFAULTS
+            replan_interval = max(replan_interval, 4)  # hold action for 4 steps
+        elif backend == "lgbm":
             defaults = self._LGBM_DEFAULTS
         else:
             defaults = dict(horizon=6, n_samples=400, n_elite=40, n_iterations=5)
@@ -64,6 +71,10 @@ class MPCModel:
             n_elite=n_elite or defaults["n_elite"],
             n_iterations=n_iterations or defaults["n_iterations"],
         )
+
+        # Replan interval: hold actions for N timesteps between solves
+        self._replan_interval = replan_interval
+        self._cached_action: Optional[Tuple[float, float, float, float]] = None
 
         # Outdoor temp ring buffer for 24h rolling mean
         self._outdoor_buffer: deque = deque(maxlen=RING_BUFFER_SIZE)
@@ -95,6 +106,12 @@ class MPCModel:
         """Compute optimal setpoints via CEM planning."""
         t_out_24h = self._update_outdoor_rolling(outdoor_temp)
         self._step += 1
+
+        # Skip CEM if within replan interval and we have a cached action
+        if (self._cached_action is not None
+                and self._step % self._replan_interval != 1):
+            return self._cached_action
+
         is_occupied = occupancy > 0.5
 
         # Build state vector from full per-zone obs (if available)
@@ -133,4 +150,6 @@ class MPCModel:
                   f"supply={supply_temp:.1f} flow={flow:.2f} "
                   f"cost={cost:.3f}€ t_out_24h={t_out_24h:.1f}°C")
 
-        return float(htg), float(clg), float(supply_temp), float(flow)
+        result = (float(htg), float(clg), float(supply_temp), float(flow))
+        self._cached_action = result
+        return result

@@ -90,10 +90,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--backend", choices=["nn", "lgbm"], default="nn",
                         help="Surrogate model backend (nn or lgbm)")
+    parser.add_argument("--fast", action="store_true",
+                        help="Fast validation mode (~10x speedup, lower quality)")
     args = parser.parse_args()
 
     from mpc_model import MPCModel
-    model = MPCModel(backend=args.backend)
+    model = MPCModel(backend=args.backend, fast=args.fast)
     rc = run_simulation(model)
 
     if rc == 0:
