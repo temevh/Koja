@@ -11,9 +11,6 @@ This script:
 import sys
 from pathlib import Path
 
-# --- EnergyPlus Python API setup ---
-ENERGYPLUS_DIR = r"C:\EnergyPlusV25-1-0"
-sys.path.append(ENERGYPLUS_DIR)
 from pyenergyplus.api import EnergyPlusAPI  # noqa: E402
 
 from energyplus_controller import EnergyPlusController
