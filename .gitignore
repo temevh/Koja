@@ -1,2 +1,29 @@
-venv
-*venv
+# Virtual environments
+.venv/
+venv/
+*venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# EnergyPlus simulation output
+eplus_out/
+outputs/
+eplusout.*
+eplusmtr.*
+eplustbl.*
+sqlite.err
+
+# Jupyter
+.ipynb_checkpoints/
+
+# DRL models & logs
+models/
+tb_logs*/
+
+# OS files
+.DS_Store
+Thumbs.db
