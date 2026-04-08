@@ -1,0 +1,8 @@
+Total cost: 10497.45 €
+
+Parameters:
+  CO2_MIN_LIMIT = 600
+  CO2_MAX_LIMIT = 800
+  FLOW_LOW = 0.15
+  FLOW_MODERATE = 0.3
+  SUP_TEMP_AT_HIGH = 19.0
