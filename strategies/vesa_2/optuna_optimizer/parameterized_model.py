@@ -2,6 +2,19 @@ from dataclasses import dataclass
 from typing import Tuple
 import numpy as np
 
+
+def _clamp(value: float, low: float, high: float) -> float:
+    return float(max(low, min(high, value)))
+
+
+def _ensure_high_from_low(low: float, high: float, min_gap: float = 0.0) -> Tuple[float, float]:
+    low = float(low)
+    high = float(high)
+    if high < low + min_gap:
+        high = low + min_gap
+    return low, high
+
+
 @dataclass
 class AHUModeParams:
     flow: float
@@ -29,24 +42,42 @@ class ParameterizedRBCModel:
         flow_boost: float = 1.0,
         flow_max: float = 1.0,
     ) -> None:
-        self.ZONE_HTG_SETPOINT_LOW = zone_htg_setpoint_low
-        self.ZONE_HTG_SETPOINT_HIGH = zone_htg_setpoint_high
-        self.ZONE_CLG_SETPOINT_LOW = zone_clg_setpoint_low
-        self.ZONE_CLG_SETPOINT_HIGH = zone_clg_setpoint_high
-        self.OUTDOOR_TEMP_LOW = outdoor_temp_low
-        self.OUTDOOR_TEMP_HIGH = outdoor_temp_high
-        self.RETURN_AIR_TEMP_LOW = return_air_temp_low
-        self.RETURN_AIR_TEMP_HIGH = return_air_temp_high
-        self.SUP_TEMP_AT_LOW = sup_temp_at_low
-        self.SUP_TEMP_AT_HIGH = sup_temp_at_high
-        self.CO2_MIN_LIMIT = co2_min_limit
-        self.CO2_MAX_LIMIT = co2_max_limit
-        self.OUTDOOR_TEMP_LOW_LIMIT = outdoor_temp_low_limit
-        self.OUTDOOR_TEMP_HIGH_LIMIT = outdoor_temp_high_limit
-        self.FLOW_LOW = flow_low
-        self.FLOW_MODERATE = flow_moderate
-        self.FLOW_BOOST = flow_boost
-        self.FLOW_MAX = flow_max
+        htg_low, htg_high = _ensure_high_from_low(zone_htg_setpoint_low, zone_htg_setpoint_high)
+        clg_low, clg_high = _ensure_high_from_low(zone_clg_setpoint_low, zone_clg_setpoint_high)
+        otemp_low, otemp_high = _ensure_high_from_low(outdoor_temp_low, outdoor_temp_high, min_gap=0.1)
+        rat_low, rat_high = _ensure_high_from_low(return_air_temp_low, return_air_temp_high, min_gap=0.1)
+        co2_low, co2_high = _ensure_high_from_low(co2_min_limit, co2_max_limit, min_gap=1.0)
+        limit_low, limit_high = _ensure_high_from_low(outdoor_temp_low_limit, outdoor_temp_high_limit, min_gap=0.1)
+
+        # Keep 1.0 C minimum deadband to avoid invalid thermostat ranges in E+.
+        if clg_low < htg_high + 1.0:
+            clg_low = htg_high + 1.0
+        if clg_high < clg_low:
+            clg_high = clg_low
+
+        flow_low = _clamp(flow_low, 0.0, 1.0)
+        flow_moderate = _clamp(flow_moderate, flow_low, 1.0)
+        flow_boost = _clamp(flow_boost, flow_moderate, 1.0)
+        flow_max = _clamp(flow_max, flow_boost, 1.0)
+
+        self.ZONE_HTG_SETPOINT_LOW = _clamp(htg_low, 18.0, 25.0)
+        self.ZONE_HTG_SETPOINT_HIGH = _clamp(htg_high, self.ZONE_HTG_SETPOINT_LOW, 25.0)
+        self.ZONE_CLG_SETPOINT_LOW = _clamp(clg_low, 18.0, 25.0)
+        self.ZONE_CLG_SETPOINT_HIGH = _clamp(clg_high, self.ZONE_CLG_SETPOINT_LOW, 25.0)
+        self.OUTDOOR_TEMP_LOW = float(otemp_low)
+        self.OUTDOOR_TEMP_HIGH = float(otemp_high)
+        self.RETURN_AIR_TEMP_LOW = float(rat_low)
+        self.RETURN_AIR_TEMP_HIGH = float(rat_high)
+        self.SUP_TEMP_AT_LOW = float(sup_temp_at_low)
+        self.SUP_TEMP_AT_HIGH = float(sup_temp_at_high)
+        self.CO2_MIN_LIMIT = float(co2_low)
+        self.CO2_MAX_LIMIT = float(co2_high)
+        self.OUTDOOR_TEMP_LOW_LIMIT = float(limit_low)
+        self.OUTDOOR_TEMP_HIGH_LIMIT = float(limit_high)
+        self.FLOW_LOW = float(flow_low)
+        self.FLOW_MODERATE = float(flow_moderate)
+        self.FLOW_BOOST = float(flow_boost)
+        self.FLOW_MAX = float(flow_max)
         
         self.htg_setpoint: float = self.ZONE_HTG_SETPOINT_LOW
         self.clg_setpoint: float = self.ZONE_CLG_SETPOINT_LOW
@@ -113,6 +144,10 @@ class ParameterizedRBCModel:
         t = np.clip((outdoor_temp - self.OUTDOOR_TEMP_LOW) / (self.OUTDOOR_TEMP_HIGH - self.OUTDOOR_TEMP_LOW), 0.0, 1.0)
         htg = self.ZONE_HTG_SETPOINT_LOW + t * (self.ZONE_HTG_SETPOINT_HIGH - self.ZONE_HTG_SETPOINT_LOW)
         clg = self.ZONE_CLG_SETPOINT_LOW + t * (self.ZONE_CLG_SETPOINT_HIGH - self.ZONE_CLG_SETPOINT_LOW)
+        if clg < htg + 1.0:
+            clg = htg + 1.0
+        htg = float(np.clip(htg, 18.0, 24.0))
+        clg = float(np.clip(clg, htg + 0.5, 25.0))
         return float(htg), float(clg)
     
     def calculate_setpoints(

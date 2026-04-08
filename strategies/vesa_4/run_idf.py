@@ -23,7 +23,23 @@ def run_with_api(idf: Path, epw: Path | None, outdir: Path) -> int:
     api = EnergyPlusAPI()
     state = api.state_manager.new_state()
 
-    model = Vesa4Model()
+    model = Vesa4Model(
+        htg_margin=0.4216,
+        clg_margin=0.6346,
+        night_htg_setback=0.3348,
+        night_clg_setup=1.0513,
+        precondition_hours=1.1420,
+        sup_temp_cold=19.0788,
+        sup_temp_warm=16.2949,
+        co2_low_threshold=608.9560,
+        co2_high_threshold=768.0477,
+        flow_min_occupied=0.1443,
+        flow_moderate=0.4047,
+        flow_pre_flush=0.4322,
+        work_start=6.8644,
+        work_end=18.7279,
+        min_deadband=0.6362,
+    )
     controller = EnergyPlusController(api, model)
 
     api.runtime.callback_after_new_environment_warmup_complete(

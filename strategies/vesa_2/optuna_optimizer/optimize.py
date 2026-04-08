@@ -139,6 +139,8 @@ def objective(trial: optuna.Trial) -> float:
         
     if params['zone_clg_setpoint_high'] - params['zone_htg_setpoint_high'] < 1.0:
         params['zone_clg_setpoint_high'] = params['zone_htg_setpoint_high'] + 1.0
+    if params['co2_max_limit'] <= params['co2_min_limit']:
+        params['co2_max_limit'] = params['co2_min_limit'] + 1.0
 
     from pyenergyplus.api import EnergyPlusAPI
     from energyplus_controller import EnergyPlusController
@@ -148,6 +150,18 @@ def objective(trial: optuna.Trial) -> float:
     state = api.state_manager.new_state()
 
     model = ParameterizedRBCModel(**params)
+    effective_params = {
+        'zone_htg_setpoint_low': model.ZONE_HTG_SETPOINT_LOW,
+        'zone_htg_setpoint_high': model.ZONE_HTG_SETPOINT_HIGH,
+        'zone_clg_setpoint_low': model.ZONE_CLG_SETPOINT_LOW,
+        'zone_clg_setpoint_high': model.ZONE_CLG_SETPOINT_HIGH,
+        'sup_temp_at_low': model.SUP_TEMP_AT_LOW,
+        'sup_temp_at_high': model.SUP_TEMP_AT_HIGH,
+        'co2_min_limit': model.CO2_MIN_LIMIT,
+        'co2_max_limit': model.CO2_MAX_LIMIT,
+        'flow_low': model.FLOW_LOW,
+        'flow_moderate': model.FLOW_MODERATE,
+    }
     controller = EnergyPlusController(api, model)
 
     api.runtime.callback_after_new_environment_warmup_complete(state, controller.initialize_handles)
@@ -173,6 +187,8 @@ def objective(trial: optuna.Trial) -> float:
 
     csv_path = trial_dir / "eplusout.csv"
     if not csv_path.exists():
+        if trial_dir.exists():
+            shutil.rmtree(trial_dir, ignore_errors=True)
         raise optuna.TrialPruned()
 
     df = load_eplusout(str(csv_path))
@@ -181,9 +197,14 @@ def objective(trial: optuna.Trial) -> float:
     trial.set_user_attr("energy_cost", costs['energy_cost'])
     trial.set_user_attr("co2_penalty", costs['co2_penalty'])
     trial.set_user_attr("temp_penalty", costs['temp_penalty'])
+    trial.set_user_attr("effective_params", effective_params)
     
     # Store final parameters and cost string
-    print(f"Trial {trial.number} -> Total: {costs['total_cost']:.1f} (E:{costs['energy_cost']:.1f}, CO2:{costs['co2_penalty']:.1f}, T:{costs['temp_penalty']:.1f})")
+    print(
+        f"Trial {trial.number} -> Total: {costs['total_cost']:.1f} "
+        f"(E:{costs['energy_cost']:.1f}, CO2:{costs['co2_penalty']:.1f}, T:{costs['temp_penalty']:.1f})"
+    )
+    print(f"  Effective params: {effective_params}")
 
     global best_cost
     if costs['total_cost'] < best_cost:
