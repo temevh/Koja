@@ -8,12 +8,13 @@ control logic.
 """
 
 from typing import Tuple
-
+import numpy as np
 from collections import deque
 
 class TemperatureTargeter:
     def __init__(self):
         self.history = deque(maxlen=24)
+        self.t = 0
 
     def update(self, outdoor_temp):
         self.history.append(outdoor_temp)
@@ -43,9 +44,12 @@ CO2_THRESHOLDS = [770, 970, 1220]
 
 controller = TemperatureTargeter()
 
+
 class MyModel:
     def __init__(self) -> None:
+        self.prev_hour = 0
         pass
+
 
     def calculate_setpoints(
         self,
@@ -77,15 +81,16 @@ class MyModel:
         """
         # TODO: Implement your control logic here
 
-        controller.update(outdoor_temp)
+        if hour != self.prev_hour:
+            controller.update(outdoor_temp)
+        self.prev_hour = hour
 
         heating_setpoint = controller.get_lower() + 0.7
-        cooling_setpoint = controller.get_upper() - 0.7
-        #print(f"heating: {heating_setpoint}, cooling: {cooling_setpoint}")
-        supply_air_temp = 19.0
+        cooling_setpoint = max(heating_setpoint, controller.get_upper() - 0.7)
+
+        supply_air_temp = 18
         if co2_concentration < CO2_THRESHOLDS[0] - 100:
             fan_flow_rate = 0.1
         else:
             fan_flow_rate = 1.0
-
         return heating_setpoint, cooling_setpoint, supply_air_temp, fan_flow_rate
