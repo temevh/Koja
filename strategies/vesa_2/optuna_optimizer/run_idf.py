@@ -112,6 +112,7 @@ def main() -> None:
                 f"Total cost: {costs['total_cost']:.2f} € "
                 f"(E:{costs['energy_cost']:.2f}, CO2:{costs['co2_penalty']:.2f}, T:{costs['temp_penalty']:.2f})"
             )
+            print(f"Rows scored: {len(df)}")
     else:
         print(f"Simulation FAILED (return code {rc}). See: {out_dir / 'eplusout.err'}")
     sys.exit(rc)

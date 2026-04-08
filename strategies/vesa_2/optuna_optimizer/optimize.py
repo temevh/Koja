@@ -52,6 +52,7 @@ COLUMN_NAMES = [
     'General:Cooling:EnergyTransfer', 'Cooling:EnergyTransfer',
 ]
 ZONE_CO2_COLS = [f'Space{i}_CO2_ppm' for i in range(1, 6)]
+MIN_VALID_ROWS = 8500  # Full-year hourly run should be close to 8760 rows.
 
 best_cost = float('inf')
 
@@ -150,7 +151,7 @@ def run_trial_once(
     trial_number: int,
     params: Dict[str, float],
     keep_output: bool = False,
-) -> Tuple[Dict[str, float], Dict[str, float]]:
+) -> Tuple[Dict[str, float], Dict[str, float], int]:
     from pyenergyplus.api import EnergyPlusAPI
     from energyplus_controller import EnergyPlusController
     from parameterized_model import ParameterizedRBCModel
@@ -188,12 +189,21 @@ def run_trial_once(
         raise optuna.TrialPruned()
 
     df = load_eplusout(str(csv_path))
+    n_rows = int(len(df))
+    if n_rows < MIN_VALID_ROWS:
+        print(
+            f"Trial {trial_number} rejected: only {n_rows} rows in eplusout.csv "
+            f"(expected >= {MIN_VALID_ROWS})"
+        )
+        if trial_dir.exists():
+            shutil.rmtree(trial_dir, ignore_errors=True)
+        raise optuna.TrialPruned()
     costs = compute_total_cost(df)
 
     if trial_dir.exists() and not keep_output:
         shutil.rmtree(trial_dir, ignore_errors=True)
 
-    return costs, effective_params
+    return costs, effective_params, n_rows
 
 def load_eplusout(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
@@ -313,17 +323,19 @@ def objective(trial: optuna.Trial) -> float:
     if params['extended_end'] < params['work_end']:
         params['extended_end'] = params['work_end']
 
-    costs, effective_params = run_trial_once(trial.number, params, keep_output=True)
+    costs, effective_params, n_rows = run_trial_once(trial.number, params, keep_output=True)
 
     trial.set_user_attr("energy_cost", costs['energy_cost'])
     trial.set_user_attr("co2_penalty", costs['co2_penalty'])
     trial.set_user_attr("temp_penalty", costs['temp_penalty'])
+    trial.set_user_attr("n_rows", n_rows)
     trial.set_user_attr("effective_params", effective_params)
     
     # Store final parameters and cost string
     print(
         f"Trial {trial.number} -> Total: {costs['total_cost']:.1f} "
-        f"(E:{costs['energy_cost']:.1f}, CO2:{costs['co2_penalty']:.1f}, T:{costs['temp_penalty']:.1f})"
+        f"(E:{costs['energy_cost']:.1f}, CO2:{costs['co2_penalty']:.1f}, "
+        f"T:{costs['temp_penalty']:.1f}, rows:{n_rows})"
     )
     print(f"  Effective params: {effective_params}")
 
@@ -370,6 +382,22 @@ if __name__ == "__main__":
             best_cost = float("inf")
     else:
         best_cost = float("inf")
+
+    # Reject stale studies whose current best was recorded without timestep completeness checks.
+    if len(study.trials) > 0:
+        n_rows_attr = study.best_trial.user_attrs.get("n_rows")
+        if n_rows_attr is None:
+            print("ERROR: Existing study best has no n_rows metadata.")
+            print("This DB may contain incomplete-run artifacts (fake low scores).")
+            print("Start a fresh DB/study before continuing.")
+            sys.exit(2)
+        if float(n_rows_attr) < MIN_VALID_ROWS:
+            print(
+                f"ERROR: Existing study best has n_rows={n_rows_attr} "
+                f"(< {MIN_VALID_ROWS}), likely incomplete simulation."
+            )
+            print("Start a fresh DB/study before continuing.")
+            sys.exit(2)
     n_trials = args.n_trials
     
     try:
