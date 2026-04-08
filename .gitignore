@@ -16,12 +16,7 @@ eplusout.*
 eplusmtr.*
 eplustbl.*
 sqlite.err
-*.csv
-*.log
-eplusout.*
-eplusmtr.*
-eplustbl.*
-sqlite.err
+api_initialization_log.txt
 
 # Jupyter
 .ipynb_checkpoints/
@@ -29,6 +24,7 @@ sqlite.err
 # DRL models & logs
 models/
 tb_logs*/
+drl_output/
 
 # OS files
 .DS_Store

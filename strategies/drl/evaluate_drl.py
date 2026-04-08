@@ -20,8 +20,8 @@ from train_drl import OBS_SPEC, ACTION_SPEC, _build_config
 # PATHS — edit these to match your setup
 # =========================================================================
 
-IDF_FILE      = os.path.join("..", "DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
-WEATHER_FILE  = os.path.join("..", "FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
+IDF_FILE      = os.path.join("..", "..", "DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
+WEATHER_FILE  = os.path.join("..", "..", "FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
 MODEL_PATH    = os.path.join("models", "sac_bc_hvac")   # path to saved model (without .zip)
 EVAL_OUT      = "drl_output/eval"
 

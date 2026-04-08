@@ -2,15 +2,73 @@ HVAC CONTROL HACKATHON
 ======================
 
 This repository contains template code for controlling a DOAS
-(Dedicated Outdoor Air System) building model in EnergyPlus using
-three approaches:
+(Dedicated Outdoor Air System) building model in EnergyPlus.
 
-  rbc_full_on/    –  RBC: Full-On (ventilation always at max capacity)
-  rbc_scheduled/  –  RBC: Scheduled Operation (time + CO2 demand control)
-  drl/            –  Deep Reinforcement Learning (DRL) agent
+All strategies control the same 5-zone small-office building model (.idf)
+and share common EnergyPlus sensor/actuator definitions from shared/.
 
-All three control the same 5-zone small-office building model (.idf)
-and share common EnergyPlus sensor/actuator definitions.
+
+TEAM COLLABORATION
+==================
+
+Directory ownership
+-------------------
+
+Each strategy lives in its own directory under strategies/.
+The golden rule: DON'T EDIT DIRECTORIES YOU DON'T OWN.
+
+This is how we avoid merge conflicts on a single main branch. Each
+person (or pair) owns their strategy directory — nobody else touches it.
+
+
+Creating a new strategy
+-----------------------
+
+  1. Copy the template:
+
+     cp -r strategies/_template strategies/<yourname>_<approach>
+
+     Example: cp -r strategies/_template strategies/alice_rbc_nightcool
+
+  2. Rename my_model.py and implement your control logic in
+     calculate_setpoints().
+
+  3. Update the import in run_idf.py to use your model class.
+
+  4. Update strategies/<your_dir>/README.md with your name and approach.
+
+  5. Run:  cd strategies/<your_dir> && python run_idf.py
+
+
+Shared code (needs team agreement)
+-----------------------------------
+
+The shared/ directory contains code used by all strategies:
+
+  shared/variable_config.py  — sensor, actuator, meter definitions
+
+If you need to change shared/, tell the team first. Changes here
+affect everyone.
+
+
+Notebooks (nbstripout is active)
+---------------------------------
+
+nbstripout is installed as a git filter. It automatically strips
+cell outputs from .ipynb files on commit, preventing the worst kind
+of merge conflicts (notebook JSON diffs with output blobs).
+
+You do NOT need to manually clear outputs before committing.
+
+
+What NOT to commit
+-------------------
+
+The .gitignore covers simulation outputs, models, logs, and caches.
+If you create new artifact directories, add them to .gitignore.
+
+Large data files (like expert_data.json ~50MB) should be shared via
+Git LFS or an external drive — not committed directly.
 
 
 OBJECTIVE
@@ -143,7 +201,8 @@ The following sensor readings are available at each timestep:
     hour               — hour of day (0–23)
     day_of_week        — day of week (1 = Sunday … 7 = Saturday)
 
-All sensors are defined in variable_config.py (each approach folder).
+All sensors are defined in shared/variable_config.py (dict format) and
+strategies/drl/variable_config.py (list format for the DRL approach).
 You can add or remove observations as needed.
 
 
@@ -171,32 +230,40 @@ PROJECT STRUCTURE
 
   <project-root>/
   ├── README.txt                       ← this file
-  ├── DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
-  ├── FIN_TR_Tampere.*.epw
+  ├── DOAS_wNeutralSupplyAir_wFanCoilUnits.idf   ← shared building model
+  ├── FIN_TR_Tampere.*.epw             ← shared weather file
+  ├── requirements.txt                 ← Python dependencies
+  ├── output_calcs_comparison.ipynb    ← side-by-side comparison
   │
-  ├── rbc_full_on/                     ← Baseline: always max ventilation
-  │   ├── rbc_model_1.py              ← control strategy (edit this)
-  │   ├── energyplus_controller.py    ← E+ API bridge
-  │   ├── run_idf.py                  ← entry point
-  │   ├── variable_config.py          ← sensor/actuator definitions
-  │   └── visualize_output.ipynb      ← analysis notebook
+  ├── shared/                          ← shared code (DON'T EDIT WITHOUT TEAM OK)
+  │   ├── __init__.py
+  │   └── variable_config.py          ← sensor/actuator/meter definitions
   │
-  ├── rbc_scheduled/                   ← Template: scheduled + CO2 control
-  │   ├── rbc_model.py                ← control strategy (edit this)
-  │   ├── energyplus_controller.py    ← E+ API bridge
-  │   ├── run_idf.py                  ← entry point
-  │   ├── variable_config.py          ← sensor/actuator definitions
-  │   └── visualize_output.ipynb      ← analysis notebook
-  │
-  ├── drl/                             ← Deep Reinforcement Learning
-  │   ├── eplus_sim.py                ← Gymnasium environment
-  │   ├── train_drl.py                ← training script (edit this)
-  │   ├── evaluate_drl.py             ← evaluation script
-  │   ├── variable_config.py          ← sensor/actuator definitions
-  │   ├── logger_eplus.py             ← logging setup
-  │   └── visualize_output.ipynb      ← analysis notebook
-  │
-  └── output_calcs_comparison.ipynb    ← side-by-side comparison
+  └── strategies/                      ← all strategies live here
+      ├── _template/                   ← copy this to start a new strategy
+      │   ├── run_idf.py              ← entry point
+      │   ├── energyplus_controller.py ← E+ API bridge (imports shared/)
+      │   ├── my_model.py             ← your control logic (edit this)
+      │   └── README.md               ← owner, approach, results
+      │
+      ├── rbc_full_on/                 ← baseline: always max ventilation
+      │   ├── rbc_model_1.py
+      │   ├── energyplus_controller.py
+      │   ├── run_idf.py
+      │   └── visualize_output.ipynb
+      │
+      ├── rbc_scheduled/               ← scheduled + CO2 demand control
+      │   ├── rbc_model.py
+      │   ├── energyplus_controller.py
+      │   ├── run_idf.py
+      │   └── visualize_output.ipynb
+      │
+      └── drl/                         ← deep reinforcement learning
+          ├── eplus_sim.py             ← Gymnasium environment
+          ├── train_drl.py
+          ├── evaluate_drl.py
+          ├── variable_config.py       ← DRL-specific format (list-based)
+          └── visualize_output.ipynb
 
 
 APPROACHES
@@ -210,24 +277,24 @@ A) RULE-BASED CONTROL (RBC)
 
 Two starting templates are provided:
 
-  rbc_full_on/rbc_model_1.py
+  strategies/rbc_full_on/rbc_model_1.py
     Simple baseline — fixed setpoints (22.5 °C heating & cooling),
     fixed supply air (19 °C), fan always at maximum (1.0 kg/s).
     No scheduling, no compensation, no CO2 control.
 
-  rbc_scheduled/rbc_model.py
+  strategies/rbc_scheduled/rbc_model.py
     Smarter template — outdoor-compensated zone setpoints, return-air-
     compensated supply temperature, CO2 demand-controlled ventilation
     (linear ramp 500–750 ppm), time-of-day fan scheduling.
 
 To implement your own RBC:
-  1. Open the rbc_model.py (or rbc_model_1.py) in your chosen folder.
-  2. Modify the calculate_setpoints() method.
-  3. All sensor data is available as function arguments.
+  1. Copy the template:  cp -r strategies/_template strategies/<yourname>_rbc_<idea>
+  2. Rename my_model.py and implement calculate_setpoints().
+  3. Update the import in run_idf.py to use your model class.
   4. Return (heating_setpoint, cooling_setpoint, supply_air_temp, fan_flow).
 
 To run:
-  cd rbc_full_on      # or rbc_scheduled
+  cd strategies/<your_strategy>
   python run_idf.py
 
 Results appear in eplus_out/eplusout.csv.
@@ -242,7 +309,7 @@ algorithm. The EnergyPlus simulation runs as a Gymnasium environment.
 To implement DRL:
 
   1. DESIGN THE REWARD FUNCTION
-     Open drl/eplus_sim.py, find get_reward() (returns 0.0 by default).
+     Open strategies/drl/eplus_sim.py, find get_reward() (returns 0.0 by default).
      Replace with your own objective. The function receives step_data
      containing all sensor/meter readings.
 
@@ -250,18 +317,18 @@ To implement DRL:
      thermal comfort deviation, and CO2 violation.
 
   2. CONFIGURE OBSERVATION SPACE (optional)
-     Open drl/train_drl.py and edit OBS_SPEC to add/remove sensors.
+     Open strategies/drl/train_drl.py and edit OBS_SPEC to add/remove sensors.
      The min/max bounds and config arrays are built automatically.
 
   3. SET HYPERPARAMETERS
-     In drl/train_drl.py, configure the SAC model constructor:
+     In strategies/drl/train_drl.py, configure the SAC model constructor:
        learning_rate
        batch_size
        gamma
        total_timesteps
 
   4. TRAIN
-     cd drl
+     cd strategies/drl
      python train_drl.py
 
      Monitor with TensorBoard:
@@ -272,7 +339,7 @@ To implement DRL:
 
      Results saved to a timestamped CSV.
 
-The trained model is saved to drl/models/sac_bc_hvac.
+The trained model is saved to strategies/drl/models/sac_bc_hvac.
 
 
 PREREQUISITES & SETUP
@@ -308,25 +375,22 @@ Software:
 
 4. Install packages:
 
-   # For RBC only:
-   pip install numpy
+   # For all dependencies:
+   pip install -r requirements.txt
 
-   # For DRL:
-   pip install stable-baselines3 imitation gymnasium numpy pandas torch
-
-   # For analysis notebooks:
-   pip install matplotlib seaborn
+   # Or with uv:
+   uv pip install -r requirements.txt
 
 5. Set the EnergyPlus path:
-   - RBC: open rbc_*/run_idf.py → set ENERGYPLUS_DIR
-   - DRL: open drl/eplus_sim.py → set ENERGYPLUS_DIR
+   - RBC: open strategies/rbc_*/run_idf.py → set ENERGYPLUS_DIR
+   - DRL: open strategies/drl/eplus_sim.py → set ENERGYPLUS_DIR
 
 6. Set the simulation file paths:
-   - RBC: open rbc_*/run_idf.py → set IDF_FILE, EPW_FILE, OUT_DIR
-   - DRL: open drl/train_drl.py → set IDF_FILE, WEATHER_FILE
+   - RBC: open strategies/rbc_*/run_idf.py → set IDF_FILE, EPW_FILE, OUT_DIR
+   - DRL: open strategies/drl/train_drl.py → set IDF_FILE, WEATHER_FILE
 
-See rbc_full_on/README.txt, rbc_scheduled/README.txt, or drl/README.txt
-for detailed step-by-step instructions.
+See strategies/rbc_full_on/README.txt, strategies/rbc_scheduled/README.txt,
+or strategies/drl/README.txt for detailed step-by-step instructions.
 
 
 RECOMMENDED TOOLS
@@ -368,7 +432,7 @@ Opening the project
 
   1. In VS Code: File → Open Folder.
   2. Navigate to the project root folder (the folder that contains
-     rbc_scheduled/, drl/, and the .idf file).
+     strategies/, shared/, and the .idf file).
   3. Click "Select Folder" (Windows) or "Open" (macOS).
   4. If VS Code asks "Do you trust the authors of the files in this
      folder?" click "Yes, I trust the authors".
@@ -442,15 +506,15 @@ Use the VS Code integrated terminal (Rightclick the wanted folder and choose 'Op
   2. Navigate to the approach folder and run:
 
      # RBC
-     cd rbc_full_on          # or rbc_scheduled
+     cd strategies/rbc_full_on          # or strategies/rbc_scheduled
      python run_idf.py
 
      # DRL training
-     cd drl
+     cd strategies/drl
      python train_drl.py
 
      # DRL evaluation
-     cd drl
+     cd strategies/drl
      python evaluate_drl.py
 
   The simulation takes a few minutes. Output appears in the terminal.
@@ -476,9 +540,9 @@ To run notebooks in VS Code:
 Workflow:
   1. Run a simulation first (python run_idf.py or train/evaluate DRL).
   2. Open the per-model notebook:
-       rbc_full_on/visualize_output.ipynb
-       rbc_scheduled/visualize_output.ipynb
-       drl/visualize_output.ipynb
+       strategies/rbc_full_on/visualize_output.ipynb
+       strategies/rbc_scheduled/visualize_output.ipynb
+       strategies/drl/visualize_output.ipynb
   3. Run all cells to see energy, CO2, temperature, and cost analysis.
   4. Open output_calcs_comparison.ipynb to compare models side by side.
      Edit the MODELS dict at the top to point to the correct
@@ -548,7 +612,7 @@ Problem: DRL agent actions are all the same / not learning
 CODE OVERVIEW
 =============
 
-RBC (rbc_full_on/ and rbc_scheduled/)
+RBC (strategies/rbc_full_on/ and strategies/rbc_scheduled/)
 --------------------------------------
 
   rbc_model.py / rbc_model_1.py
@@ -565,18 +629,14 @@ RBC (rbc_full_on/ and rbc_scheduled/)
     Bridges the EnergyPlus Python API and the RBC model. Reads sensor
     data via runtime handles, calls the model, writes actuator values.
     Also collects observation/action pairs for trajectory export.
-
-  variable_config.py
-    Maps short aliases to EnergyPlus variable/actuator/meter identifiers.
-    Three dicts: VARIABLES (sensors), ACTUATORS (control points),
-    METERS (energy meters).
+    Imports sensor/actuator definitions from shared/variable_config.py.
 
   run_idf.py
     Entry point. Sets up paths, instantiates the model and controller,
     registers EnergyPlus callbacks, launches the simulation.
 
 
-DRL (drl/)
+DRL (strategies/drl/)
 -----------
 
   eplus_sim.py
@@ -633,7 +693,8 @@ NOTES
   installation (typically under WeatherData/).
 
 - Each approach writes EnergyPlus output to its own subfolder
-  (rbc_full_on/eplus_out/, rbc_scheduled/eplus_out/, drl/outputs/).
+  (strategies/rbc_full_on/eplus_out/, strategies/rbc_scheduled/eplus_out/,
+  strategies/drl/outputs/).
 
 - After running, use output_calcs_comparison.ipynb to compare
   energy, CO2, and temperature performance side by side.

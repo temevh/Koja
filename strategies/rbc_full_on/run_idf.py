@@ -6,7 +6,6 @@ This script:
 2. Registers the RBC controller callbacks (handle init, control logic,
    and optional API-data dump).
 3. Launches the EnergyPlus simulation and returns the exit code.
-
 """
 
 import sys
@@ -26,11 +25,11 @@ sys.path.append(ENERGYPLUS_DIR)
 from pyenergyplus.api import EnergyPlusAPI  # noqa: E402
 
 from energyplus_controller import EnergyPlusController
-from rbc_model import RBCModel
+from rbc_model_1 import RBCModel as RBCModelFullOn
 
 # --- Paths ---
-IDF_FILE = Path(r"../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
-EPW_FILE = Path(r"../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
+IDF_FILE = Path(r"../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
+EPW_FILE = Path(r"../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
 OUT_DIR  = Path(r"eplus_out")
 
 def run_with_api(idf: Path, epw: Path | None, outdir: Path) -> int:
@@ -48,7 +47,7 @@ def run_with_api(idf: Path, epw: Path | None, outdir: Path) -> int:
     state = api.state_manager.new_state()
 
     # --- Instantiate control strategy ---
-    model = RBCModel()
+    model = RBCModelFullOn()
     controller = EnergyPlusController(api, model)
 
     # --- Register runtime callbacks ---
@@ -78,18 +77,6 @@ def run_with_api(idf: Path, epw: Path | None, outdir: Path) -> int:
     except TypeError:
         # Fallback for older pyenergyplus versions
         rc = api.runtime.run_energyplus(args)
-
-    # Mark final transition as terminal if any data was collected
-    if controller.trajectories:
-        controller.trajectories[-1]["done"] = True
-
-    # Save expert data
-    try:
-        TRAJ_JSON = OUT_DIR / "expert_data.json"
-        controller.save_trajectories(str(TRAJ_JSON))
-        print(f"Saved expert trajectories to: {TRAJ_JSON}")
-    except Exception as e:
-        print(f"WARNING: failed to save JSON trajectories: {e}")
 
     return int(rc)
 

@@ -33,8 +33,8 @@ from eplus_sim import EnergyPlusEnv
 # 1. PATHS — edit these to match your local setup
 # =========================================================================
 
-IDF_FILE     = os.path.join("..", "DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
-WEATHER_FILE = os.path.join("..", "FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
+IDF_FILE     = os.path.join("..", "..", "DOAS_wNeutralSupplyAir_wFanCoilUnits.idf")
+WEATHER_FILE = os.path.join("..", "..", "FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw")
 EXPERT_JSON  = "expert_data.json"
 MODEL_DIR    = "models"
 TRAIN_OUT    = "drl_output/train"

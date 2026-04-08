@@ -14,10 +14,14 @@ Usage:
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import Any, Dict, Optional, List
 import json
 
-from variable_config import METERS, VARIABLES, ACTUATORS
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from shared.variable_config import METERS, VARIABLES, ACTUATORS
 
 
 class EnergyPlusController:
@@ -33,7 +37,133 @@ class EnergyPlusController:
         self.model = model
         self.handles: Dict[str, int] = {}
 
+        # --- trajectory storage ---
+        self.prev_obs: Optional[Dict] = None
+        self.prev_action: Optional[Dict] = None
+        self.trajectories: List[Dict] = []
 
+
+        self.observation_min = {
+            'outdoor_temp':-25.0,
+
+            # plenum_temp
+            'plenum_temp': 0.0,
+
+            # space1
+            'space1_temp': 10.0,
+            'space1_rh': 0.0,
+            'space1_co2': 400.0,
+
+            # space2
+            'space2_temp': 10.0,
+            'space2_rh': 0.0,
+            'space2_co2': 400.0,
+
+            # space3
+            'space3_temp': 10.0,
+            'space3_rh': 0.0,
+            'space3_co2': 400.0,
+
+            # space4
+            'space4_temp': 10.0,
+            'space4_rh': 0.0,
+            'space4_co2': 400.0,
+
+            # space5
+            'space5_temp': 10.0,
+            'space5_rh': 0.0,
+            'space5_co2': 400.0,
+
+            # electricity_hvac (J)
+            'electricity_hvac': 0.0,
+
+
+            # gas_total
+            'gas_total': 0.0,
+
+            # hour
+            'hour': 0.0,
+
+            # day_of_week
+            'day_of_week': 1.0,
+
+            # holiday
+            'holiday': 0.0,
+
+            # max_delta_co2
+            'max_delta_co2': 0.0,
+
+            # outdoor_temp_24h_avg
+            'outdoor_temp_24h_avg': -25.0
+        }
+        self.observation_max = {
+             # outdoor_temp
+            'outdoor_temp': 40.0,
+
+            # plenum_temp
+            'plenum_temp': 50.0,
+
+            # space1
+            'space1_temp': 35.0,
+            'space1_rh': 100.0,
+            'space1_co2': 2000.0,
+
+            # space2
+            'space2_temp': 35.0,
+            'space2_rh': 100.0,
+            'space2_co2': 2000.0,
+
+            # space3
+            'space3_temp': 35.0,
+            'space3_rh': 100.0,
+            'space3_co2': 2000.0,
+
+            # space4
+            'space4_temp': 35.0,
+            'space4_rh': 100.0,
+            'space4_co2': 2000.0,
+
+            # space5
+            'space5_temp': 35.0,
+            'space5_rh': 100.0,
+            'space5_co2': 2000.0,
+
+            # electricity_hvac (J)
+            'electricity_hvac': 50000000.0,
+
+
+            # gas_total (J)
+            'gas_total': 100000000.0,
+
+            # hour
+            'hour': 23.0,
+
+            # day_of_week
+            'day_of_week': 7.0,
+
+            # holiday
+            'holiday': 1.0,
+
+            # max_delta_co2
+            'max_delta_co2': 2000.0,
+
+            # outdoor_temp_24h_avg
+            'outdoor_temp_24h_avg': 40.0
+
+        }
+
+        self.action_min = {
+            "cooling_setpoint": 18.0,
+            "heating_setpoint": 18.0,
+            "ahu_supply_temp": 16.0,
+            "supply_fan_flow": 0.0,
+        }
+        self.action_max = {
+            "cooling_setpoint": 25.0,
+            "heating_setpoint": 25.0,
+            "ahu_supply_temp": 21.0,
+            "supply_fan_flow": 0.96,
+        }
     # Handle initialisation
 
 
@@ -125,12 +255,40 @@ class EnergyPlusController:
             'gas_total': self.get_variable("gas_total", state),
 
             "hour": float(self.api.exchange.hour(state)),
-            "day_of_week": float(self.api.exchange.day_of_week(state)),  
+            "day_of_week": float(self.api.exchange.day_of_week(state)),   
         }
 
         return obs
     
+    def _normalize_obs(self, obs: Dict[str, float]) -> Dict[str, float]:
+        """Normalize observations to [-1, 1] based on predefined min/max values."""
+        normalized = {}
+        for key in obs:
+            if key in self.observation_min and key in self.observation_max:
+                min_val = self.observation_min[key]
+                max_val = self.observation_max[key]
+                if max_val > min_val:
+                    normalized[key] = 2 * (obs[key] - min_val) / (max_val - min_val) - 1
+                else:
+                    normalized[key] = 0.0
+            else:
+                normalized[key] = obs[key]
+        return normalized
 
+    def _normalize_action(self, action: Dict[str, float]) -> Dict[str, float]:
+        """Normalize actions to [-1, 1] based on predefined min/max values."""
+        normalized = {}
+        for key in action:
+            if key in self.action_min and key in self.action_max:
+                min_val = self.action_min[key]
+                max_val = self.action_max[key]
+                if max_val > min_val:
+                    normalized[key] = 2 * (action[key] - min_val) / (max_val - min_val) - 1
+                else:
+                    normalized[key] = 0.0
+            else:
+                normalized[key] = action[key]
+        return normalized
 
     # Main control callback
     
@@ -189,7 +347,36 @@ class EnergyPlusController:
         self.set_actuator("ahu_temperature_setpoint", supply_air_temp, state)
         self.set_actuator("ahu_mass_flow_rate_setpoint", flow, state)
 
-    
+
+
+        # --- log transition ---
+
+        action = {
+            "cooling_setpoint": clg,
+            "heating_setpoint": htg,
+            "ahu_supply_temp": supply_air_temp,
+            "supply_fan_flow": flow,
+        }
+
+        # Normalize the actions and obesrvations
+        normalized_obs = self._normalize_obs(obs)
+        normalized_action = self._normalize_action(action)
+
+        if self.prev_obs is not None:
+            # If desired, a reward could be computed here based on the previous observation, action, and the current observation for the DRL approach and behavioral cloning. For now, we will set it to 0.0 as a placeholder.
+            reward = 0.0
+
+            self.trajectories.append({
+                "obs": self.prev_obs,
+                "action": self.prev_action,
+                "reward": reward,
+                "next_obs": normalized_obs,
+                "done": False,
+            })
+
+        self.prev_obs = normalized_obs
+        self.prev_action = normalized_action
+
     # Debug / introspection
     
 
@@ -208,3 +395,8 @@ class EnergyPlusController:
                     f"{item.unit}, {item.what}\n"
                 )
         print(f"API data ({len(api_data)} items) written to api_initialization_log.txt")
+
+        
+    def save_trajectories(self, path: str = "expert_data.json"):
+        with open(path, "w") as f:
+            json.dump(self.trajectories, f)
