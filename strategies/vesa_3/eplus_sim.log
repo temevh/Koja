@@ -1,0 +1,78 @@
+2026-04-08 13:04:28 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 13:04:28 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 13:04:28 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 13:04:28 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 13:21:37 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 13:21:37 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 13:21:37 | INFO     | action_space: Box(-1.0, 1.0, (4,), float32)
+2026-04-08 13:21:37 | INFO     | observation_space: Box(-1.0, 1.0, (21,), float32)
+2026-04-08 13:23:15 | INFO     | ---------- reset -----------
+2026-04-08 13:23:15 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:23:15 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:23:15 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:23:15 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:23:15 | INFO     | Output path: vesa_3_output/train_eval
+2026-04-08 13:23:15 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:23:15 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:23:34 | INFO     | Closing EnergyPlusEnv
+2026-04-08 13:23:35 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:23:35 | INFO     | ---------- reset -----------
+2026-04-08 13:23:35 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:23:35 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:23:35 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:23:35 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:23:35 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:23:35 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:23:35 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:24:05 | INFO     | ---------- reset -----------
+2026-04-08 13:24:05 | INFO     | eplus_sim_step 5001 — continuing current E+ run
+2026-04-08 13:27:30 | INFO     | ---------- reset -----------
+2026-04-08 13:27:30 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:27:31 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:27:31 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:27:31 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:27:31 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:27:31 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:27:31 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:27:31 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:27:31 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:32:26 | INFO     | ---------- reset -----------
+2026-04-08 13:32:26 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:32:27 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:32:28 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:32:28 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:32:28 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:32:28 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:32:28 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:32:28 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:32:28 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:37:24 | INFO     | ---------- reset -----------
+2026-04-08 13:37:24 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:37:25 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:37:25 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:37:25 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:37:25 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:37:25 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:37:25 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:37:25 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:37:25 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:42:54 | INFO     | ---------- reset -----------
+2026-04-08 13:42:54 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:42:55 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:42:55 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:42:55 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:42:55 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:42:55 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:42:55 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:42:55 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:42:55 | INFO     | EnergyPlus handles initialized
+2026-04-08 13:48:35 | INFO     | ---------- reset -----------
+2026-04-08 13:48:35 | INFO     | Joining previous EnergyPlus thread …
+2026-04-08 13:48:36 | INFO     | EnergyPlus finished with exit code 0
+2026-04-08 13:48:36 | INFO     | Starting new EnergyPlus run
+2026-04-08 13:48:36 | INFO     | Starting EnergyPlus simulation
+2026-04-08 13:48:36 | INFO     | IDF: ../../DOAS_wNeutralSupplyAir_wFanCoilUnits.idf
+2026-04-08 13:48:36 | INFO     | Weather: ../../FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw
+2026-04-08 13:48:36 | INFO     | Output path: vesa_3_output/train
+2026-04-08 13:48:37 | WARNING  | Some meter handles were not found: ['elec_facility']
+2026-04-08 13:48:37 | INFO     | EnergyPlus handles initialized
