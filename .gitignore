@@ -16,6 +16,12 @@ eplusout.*
 eplusmtr.*
 eplustbl.*
 sqlite.err
+*.csv
+*.log
+eplusout.*
+eplusmtr.*
+eplustbl.*
+sqlite.err
 
 # Jupyter
 .ipynb_checkpoints/
