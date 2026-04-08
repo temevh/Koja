@@ -1,1 +1,7 @@
-Current PR: 8504
+Total cost: 8181.68 €
+
+Parameters:
+  ZONE_HTG_SETPOINT_LOW = 21.5
+  ZONE_CLG_SETPOINT_LOW = 21.5
+  SUP_TEMP_AT_LOW = 19.0
+  SUP_TEMP_AT_HIGH = 18.0
