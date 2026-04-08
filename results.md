@@ -1,13 +1,7 @@
-╔══════════════════════════════════════════════════════╗
-║  BEST CONFIGURATION                                 ║
-╠══════════════════════════════════════════════════════╣
-║  ZONE_HTG_SETPOINT_LOW               =    21.50  ║
-║  ZONE_CLG_SETPOINT_LOW               =    21.50  ║
-║  SUP_TEMP_AT_LOW                     =    19.00  ║
-║  SUP_TEMP_AT_HIGH                    =    19.00  ║
-╠══════════════════════════════════════════════════════╣
-║  Energy cost:             7975.88 €            ║
-║  CO2 penalty:               52.00 €            ║
-║  Temperature penalty:      148.00 €            ║
-║  TOTAL:                   8175.88 €            ║
-╚══════════════════════════════════════════════════════╝
+Total cost: 8181.68 €
+
+Parameters:
+  ZONE_HTG_SETPOINT_LOW = 21.5
+  ZONE_CLG_SETPOINT_LOW = 21.5
+  SUP_TEMP_AT_LOW = 19.0
+  SUP_TEMP_AT_HIGH = 18.0
