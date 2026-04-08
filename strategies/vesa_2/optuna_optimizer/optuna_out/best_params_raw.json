@@ -1,0 +1,21 @@
+{
+  "zone_htg_setpoint_low": 20.993415005059763,
+  "zone_htg_setpoint_high": 22.692866170149024,
+  "zone_clg_setpoint_low": 23.692866170149024,
+  "zone_clg_setpoint_high": 23.692866170149024,
+  "sup_temp_at_low": 17.78886220788217,
+  "sup_temp_at_high": 16.573886465320346,
+  "co2_min_limit": 522.737669226883,
+  "co2_max_limit": 783.1790569997825,
+  "flow_low": 0.08074754393841393,
+  "flow_moderate": 0.5259237252439722,
+  "precondition_hours": 2.4343336598444383,
+  "night_htg_setback": 0.09867105796777585,
+  "night_clg_setup": 0.8025096916026713,
+  "min_deadband": 1.0139283311228098,
+  "flow_night": 0.08074754393841393,
+  "flow_pre_flush": 0.7088617814313496,
+  "work_start": 5.595538311542308,
+  "work_end": 18.931192200826487,
+  "extended_end": 23.117247003835026
+}

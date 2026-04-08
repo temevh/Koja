@@ -1,0 +1,19 @@
+{
+  "htg_margin": 0.42477,
+  "clg_margin": 0.256437,
+  "night_htg_setback": 0.40918,
+  "night_clg_setup": 0.20391,
+  "sup_temp_cold": 19.421875,
+  "sup_temp_warm": 18.014091,
+  "flow_work": 0.27317,
+  "flow_evening": 0.139408,
+  "flow_night": 0.000475,
+  "flow_preflush": 0.454058,
+  "co2_low": 669.647564,
+  "co2_high": 762.521603,
+  "co2_emergency": 949.564497,
+  "nightflush_flow": 0.331905,
+  "temp_recovery_gap": 0.434337,
+  "temp_recovery_flow": 0.525042,
+  "s2_recovery_flow": 0.955697
+}

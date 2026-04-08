@@ -18,6 +18,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[2]
 IDF_FILE = PROJECT_ROOT / "DOAS_wNeutralSupplyAir_wFanCoilUnits.idf"
 EPW_FILE = PROJECT_ROOT / "FIN_TR_Tampere.Satakunnankatu.027440_TMYx.2004-2018.epw"
+BEST_RAW_JSON = SCRIPT_DIR / "optuna_out" / "best_params_raw.json"
+BEST_EFFECTIVE_JSON = SCRIPT_DIR / "optuna_out" / "best_params_effective.json"
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,8 +27,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--params-json",
         type=str,
-        required=True,
         help="JSON object of model params (string or @path/to/file.json)",
+    )
+    parser.add_argument(
+        "--from-best",
+        action="store_true",
+        help="Load params from optuna_out/best_params_effective.json (fallback raw)",
     )
     parser.add_argument(
         "--out-dir",
@@ -42,6 +48,16 @@ def load_params(params_arg: str) -> dict:
         params_path = Path(params_arg[1:]).expanduser().resolve()
         return json.loads(params_path.read_text(encoding="utf-8"))
     return json.loads(params_arg)
+
+
+def load_best_params() -> dict:
+    if BEST_EFFECTIVE_JSON.exists():
+        return json.loads(BEST_EFFECTIVE_JSON.read_text(encoding="utf-8"))
+    if BEST_RAW_JSON.exists():
+        return json.loads(BEST_RAW_JSON.read_text(encoding="utf-8"))
+    raise FileNotFoundError(
+        f"No best params file found. Expected {BEST_EFFECTIVE_JSON} or {BEST_RAW_JSON}."
+    )
 
 
 def run_with_api(model: ParameterizedRBCModel, out_dir: Path) -> int:
@@ -70,21 +86,16 @@ def main() -> None:
     if not EPW_FILE.exists():
         sys.exit(f"ERROR: Weather file not found: {EPW_FILE}")
 
-    params = load_params(args.params_json)
+    if args.from_best:
+        params = load_best_params()
+        print("Loaded params from best params file.")
+    elif args.params_json:
+        params = load_params(args.params_json)
+    else:
+        sys.exit("ERROR: pass either --params-json ... or --from-best")
     model = ParameterizedRBCModel(**params)
 
-    effective = {
-        "zone_htg_setpoint_low": model.ZONE_HTG_SETPOINT_LOW,
-        "zone_htg_setpoint_high": model.ZONE_HTG_SETPOINT_HIGH,
-        "zone_clg_setpoint_low": model.ZONE_CLG_SETPOINT_LOW,
-        "zone_clg_setpoint_high": model.ZONE_CLG_SETPOINT_HIGH,
-        "sup_temp_at_low": model.SUP_TEMP_AT_LOW,
-        "sup_temp_at_high": model.SUP_TEMP_AT_HIGH,
-        "co2_min_limit": model.CO2_MIN_LIMIT,
-        "co2_max_limit": model.CO2_MAX_LIMIT,
-        "flow_low": model.FLOW_LOW,
-        "flow_moderate": model.FLOW_MODERATE,
-    }
+    effective = model.effective_params()
     print("Effective params (after safety normalization):")
     print(json.dumps(effective, indent=2))
 

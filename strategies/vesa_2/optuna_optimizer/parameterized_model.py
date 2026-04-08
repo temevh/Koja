@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from collections import deque
 from typing import Tuple
 import numpy as np
 
@@ -41,6 +42,15 @@ class ParameterizedRBCModel:
         flow_moderate: float = 0.3,
         flow_boost: float = 1.0,
         flow_max: float = 1.0,
+        precondition_hours: float = 1.0,
+        work_start: float = 6.0,
+        work_end: float = 18.0,
+        extended_end: float = 22.0,
+        night_htg_setback: float = 0.2,
+        night_clg_setup: float = 0.2,
+        min_deadband: float = 1.0,
+        flow_night: float = 0.05,
+        flow_pre_flush: float = 0.35,
     ) -> None:
         htg_low, htg_high = _ensure_high_from_low(zone_htg_setpoint_low, zone_htg_setpoint_high)
         clg_low, clg_high = _ensure_high_from_low(zone_clg_setpoint_low, zone_clg_setpoint_high)
@@ -59,6 +69,15 @@ class ParameterizedRBCModel:
         flow_moderate = _clamp(flow_moderate, flow_low, 1.0)
         flow_boost = _clamp(flow_boost, flow_moderate, 1.0)
         flow_max = _clamp(flow_max, flow_boost, 1.0)
+        precondition_hours = _clamp(precondition_hours, 0.0, 4.0)
+        work_start = _clamp(work_start, 0.0, 12.0)
+        work_end = _clamp(work_end, max(work_start + 4.0, 8.0), 24.0)
+        extended_end = _clamp(extended_end, work_end, 24.0)
+        night_htg_setback = _clamp(night_htg_setback, 0.0, 2.0)
+        night_clg_setup = _clamp(night_clg_setup, 0.0, 2.0)
+        min_deadband = _clamp(min_deadband, 0.5, 3.0)
+        flow_night = _clamp(flow_night, 0.0, flow_low)
+        flow_pre_flush = _clamp(flow_pre_flush, flow_low, flow_boost)
 
         self.ZONE_HTG_SETPOINT_LOW = _clamp(htg_low, 18.0, 25.0)
         self.ZONE_HTG_SETPOINT_HIGH = _clamp(htg_high, self.ZONE_HTG_SETPOINT_LOW, 25.0)
@@ -78,10 +97,20 @@ class ParameterizedRBCModel:
         self.FLOW_MODERATE = float(flow_moderate)
         self.FLOW_BOOST = float(flow_boost)
         self.FLOW_MAX = float(flow_max)
+        self.PRECONDITION_HOURS = float(precondition_hours)
+        self.WORK_START = float(work_start)
+        self.WORK_END = float(work_end)
+        self.EXTENDED_END = float(extended_end)
+        self.NIGHT_HTG_SETBACK = float(night_htg_setback)
+        self.NIGHT_CLG_SETUP = float(night_clg_setup)
+        self.MIN_DEADBAND = float(min_deadband)
+        self.FLOW_NIGHT = float(flow_night)
+        self.FLOW_PRE_FLUSH = float(flow_pre_flush)
         
         self.htg_setpoint: float = self.ZONE_HTG_SETPOINT_LOW
         self.clg_setpoint: float = self.ZONE_CLG_SETPOINT_LOW
         self._co2_boosting: bool = False
+        self._outdoor_history: deque = deque(maxlen=96)  # 24h at 15-min timestep
         self.mode_params = {
             0: AHUModeParams(flow=0.0, mode_name="off"),
             1: AHUModeParams(flow=self.FLOW_LOW, mode_name="low"),
@@ -89,21 +118,74 @@ class ParameterizedRBCModel:
             3: AHUModeParams(flow=self.FLOW_BOOST, mode_name="boost"),
         }
 
+    def effective_params(self) -> dict:
+        return {
+            "zone_htg_setpoint_low": self.ZONE_HTG_SETPOINT_LOW,
+            "zone_htg_setpoint_high": self.ZONE_HTG_SETPOINT_HIGH,
+            "zone_clg_setpoint_low": self.ZONE_CLG_SETPOINT_LOW,
+            "zone_clg_setpoint_high": self.ZONE_CLG_SETPOINT_HIGH,
+            "outdoor_temp_low": self.OUTDOOR_TEMP_LOW,
+            "outdoor_temp_high": self.OUTDOOR_TEMP_HIGH,
+            "return_air_temp_low": self.RETURN_AIR_TEMP_LOW,
+            "return_air_temp_high": self.RETURN_AIR_TEMP_HIGH,
+            "sup_temp_at_low": self.SUP_TEMP_AT_LOW,
+            "sup_temp_at_high": self.SUP_TEMP_AT_HIGH,
+            "co2_min_limit": self.CO2_MIN_LIMIT,
+            "co2_max_limit": self.CO2_MAX_LIMIT,
+            "outdoor_temp_low_limit": self.OUTDOOR_TEMP_LOW_LIMIT,
+            "outdoor_temp_high_limit": self.OUTDOOR_TEMP_HIGH_LIMIT,
+            "flow_low": self.FLOW_LOW,
+            "flow_moderate": self.FLOW_MODERATE,
+            "flow_boost": self.FLOW_BOOST,
+            "flow_max": self.FLOW_MAX,
+            "precondition_hours": self.PRECONDITION_HOURS,
+            "work_start": self.WORK_START,
+            "work_end": self.WORK_END,
+            "extended_end": self.EXTENDED_END,
+            "night_htg_setback": self.NIGHT_HTG_SETBACK,
+            "night_clg_setup": self.NIGHT_CLG_SETUP,
+            "min_deadband": self.MIN_DEADBAND,
+            "flow_night": self.FLOW_NIGHT,
+            "flow_pre_flush": self.FLOW_PRE_FLUSH,
+        }
+
+    def _outdoor_24h_mean(self, outdoor_temp: float) -> float:
+        self._outdoor_history.append(float(outdoor_temp))
+        return float(sum(self._outdoor_history) / len(self._outdoor_history))
+
+    def _s1_lower(self, t_mean: float) -> float:
+        if t_mean <= 0.0:
+            return 20.5
+        if t_mean <= 20.0:
+            return 20.5 + 0.075 * t_mean
+        return 22.0
+
+    def _s1_upper(self, t_mean: float) -> float:
+        if t_mean <= 0.0:
+            return 22.0
+        if t_mean <= 15.0:
+            return 22.0 + 0.2 * t_mean
+        return 25.0
+
+    def _s2_lower(self, t_mean: float) -> float:
+        if t_mean <= 0.0:
+            return 20.5
+        if t_mean <= 20.0:
+            return 20.5 + 0.025 * t_mean
+        return 21.0
+
     def co2_flow_control(self, hour: float, day: int, co2_concentration: float, outdoortemp: float) -> float:
         is_workday = day != 1 and day != 7
-        is_nightflush = is_workday and 1.5 <= hour < 2.5 
-        is_nightflush_weekend = not is_workday and 0.0 <= hour < 2.0 
-        is_before_work_flush = is_workday and 4.5 <= hour < 5.5 
-        is_weekend_flush = not is_workday and 6.0 <= hour < 17.0 
-        is_working_hours = is_workday and 5.5 <= hour < 23.5 
+        is_pre_condition = is_workday and (self.WORK_START - self.PRECONDITION_HOURS) <= hour < self.WORK_START
+        is_working_hours = is_workday and self.WORK_START <= hour < self.WORK_END
+        is_extended = is_workday and self.WORK_END <= hour < self.EXTENDED_END
 
-        base_flow = 0.0
-        if is_before_work_flush:
-            base_flow = self.FLOW_MODERATE
-        elif is_nightflush or is_nightflush_weekend or is_weekend_flush or is_working_hours:
+        if is_pre_condition:
+            base_flow = self.FLOW_PRE_FLUSH
+        elif is_working_hours or is_extended:
             base_flow = self.FLOW_LOW
         else:
-            base_flow = 0.0
+            base_flow = self.FLOW_NIGHT
 
         co2_flow = 0.0
         if co2_concentration <= self.CO2_MIN_LIMIT:
@@ -141,12 +223,26 @@ class ParameterizedRBCModel:
         ))
 
     def zone_setpoints(self, outdoor_temp: float) -> Tuple[float, float]:
-        t = np.clip((outdoor_temp - self.OUTDOOR_TEMP_LOW) / (self.OUTDOOR_TEMP_HIGH - self.OUTDOOR_TEMP_LOW), 0.0, 1.0)
-        htg = self.ZONE_HTG_SETPOINT_LOW + t * (self.ZONE_HTG_SETPOINT_HIGH - self.ZONE_HTG_SETPOINT_LOW)
-        clg = self.ZONE_CLG_SETPOINT_LOW + t * (self.ZONE_CLG_SETPOINT_HIGH - self.ZONE_CLG_SETPOINT_LOW)
+        t_mean = self._outdoor_24h_mean(outdoor_temp)
+        s1_low = self._s1_lower(t_mean)
+        s1_up = self._s1_upper(t_mean)
+
+        # Map optimized absolute anchors to dynamic S1-relative margins.
+        # At cold side, S1 is narrower/lower than warm side.
+        h_margin_cold = self.ZONE_HTG_SETPOINT_LOW - 20.5
+        h_margin_warm = self.ZONE_HTG_SETPOINT_HIGH - 22.0
+        c_margin_cold = 22.0 - self.ZONE_CLG_SETPOINT_LOW
+        c_margin_warm = 25.0 - self.ZONE_CLG_SETPOINT_HIGH
+
+        blend = float(np.clip((t_mean - 0.0) / 20.0, 0.0, 1.0))
+        h_margin = h_margin_cold + blend * (h_margin_warm - h_margin_cold)
+        c_margin = c_margin_cold + blend * (c_margin_warm - c_margin_cold)
+
+        htg = s1_low + h_margin
+        clg = s1_up - c_margin
         if clg < htg + 1.0:
             clg = htg + 1.0
-        htg = float(np.clip(htg, 18.0, 24.0))
+        htg = float(np.clip(htg, 19.0, 24.0))
         clg = float(np.clip(clg, htg + 0.5, 25.0))
         return float(htg), float(clg)
     
@@ -160,13 +256,32 @@ class ParameterizedRBCModel:
         day: int,
         co2_concentration: float,
     ) -> Tuple[float, float, float, float]:
-        supply_air_temp = self.return_air_compensation(return_air_temp)
+        is_workday = day != 1 and day != 7
+        is_pre_condition = is_workday and (self.WORK_START - self.PRECONDITION_HOURS) <= hour < self.WORK_START
+        is_working = is_workday and self.WORK_START <= hour < self.WORK_END
+        is_extended = is_workday and self.WORK_END <= hour < self.EXTENDED_END
+
         htg, clg = self.zone_setpoints(outdoor_temp)
 
-        # Slight night setback for heating and setup for cooling
-        if hour < 5.5 or hour >= 20.0:
-            htg = max(18.0, htg - 0.5)
-            clg = min(25.0, clg + 0.5)
+        if not (is_pre_condition or is_working or is_extended):
+            # Mild relaxation only; large setbacks created heavy temp penalties.
+            s2_low = self._s2_lower(self._outdoor_24h_mean(outdoor_temp))
+            htg = max(s2_low + 0.2, htg - self.NIGHT_HTG_SETBACK)
+            clg = min(25.0, clg + self.NIGHT_CLG_SETUP)
+
+        if clg - htg < self.MIN_DEADBAND:
+            mid = 0.5 * (clg + htg)
+            htg = mid - 0.5 * self.MIN_DEADBAND
+            clg = mid + 0.5 * self.MIN_DEADBAND
+        htg = float(np.clip(htg, 19.0, 24.0))
+        clg = float(np.clip(clg, htg + 0.5, 25.0))
+
+        supply_air_temp = self.return_air_compensation(return_air_temp)
+        # Add small feedback trim to improve comfort recovery during cold/hot excursions.
+        if zone_temp < htg - 0.3:
+            supply_air_temp = min(21.0, supply_air_temp + 0.8)
+        elif zone_temp > clg + 0.3:
+            supply_air_temp = max(16.0, supply_air_temp - 0.6)
 
         self.htg_setpoint = htg
         self.clg_setpoint = clg
