@@ -1,0 +1,26 @@
+"""Current best parameters for vesa_5 (auto-updated by optimize.py)."""
+
+BEST_PARAMS = {
+    "clg_margin": 0.251089,
+    "co2_emergency": 1046.779275,
+    "co2_high_threshold": 783.047192,
+    "co2_low_threshold": 585.414427,
+    "cold_limit_high": -16.823413,
+    "cold_limit_low": -24.132814,
+    "extended_end": 22.408924,
+    "flow_boost": 1.0,
+    "flow_min_occupied": 0.192045,
+    "flow_night": 0.058596,
+    "flow_pre_flush": 0.267613,
+    "htg_margin": 0.477598,
+    "min_deadband": 0.752177,
+    "night_clg_setup": 1.484032,
+    "night_htg_setback": 0.309469,
+    "precondition_hours": 2.10446,
+    "return_air_cold_ref": 22.834472,
+    "return_air_warm_ref": 25.834177,
+    "sup_temp_cold": 17.979695,
+    "sup_temp_warm": 17.218899,
+    "work_end": 17.886447,
+    "work_start": 6.638634,
+}
