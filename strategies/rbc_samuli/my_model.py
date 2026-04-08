@@ -24,14 +24,18 @@ class TemperatureTargeter:
         t = self.t
 
         lower = 20.5 if t <= 0 else (20.5 + 0.075 * t if t <= 20 else 22.0)
-
+        if len(self.history) < 24:
+            lower = 22
+        #if len(self.history) < 24:
+        #    lower += 1.0 
         return lower   
     
     def get_upper(self):
         t = self.t
 
         upper = 22.0 if t <= 0 else (22.5 + 0.166 * t if t <= 15 else 25.0)
-
+        if len(self.history) < 24:
+            lower = 25
         return upper   
     
     def get_target(self):
@@ -83,8 +87,8 @@ class MyModel:
             controller.update(outdoor_temp)
         self.prev_hour = hour
 
-        heating_setpoint = controller.get_lower() + 0.6
-        cooling_setpoint = controller.get_upper() - 0.1
+        heating_setpoint = controller.get_lower() + 0.03
+        cooling_setpoint = max(heating_setpoint, controller.get_upper() - 0.03)
         #print(f"heating: {heating_setpoint}, cooling: {cooling_setpoint}")
         #supply_air_temp = 18.0
         if zone_temp < heating_setpoint + 0.1:
