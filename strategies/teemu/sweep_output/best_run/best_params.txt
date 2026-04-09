@@ -1,7 +1,0 @@
-Total cost: 8398.70 €
-
-Parameters:
-  ZONE_HTG_SETPOINT_LOW = 21.0
-  ZONE_CLG_SETPOINT_LOW = 21.5
-  SUP_TEMP_AT_LOW = 19.0
-  SUP_TEMP_AT_HIGH = 19.0

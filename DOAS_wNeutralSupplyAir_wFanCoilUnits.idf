@@ -13,12 +13,6 @@
 ! Simulation Location/Run: CHICAGO_IL_USA TMY2-94846, 2 design days, weather file annual runs,
 !                          Run Control executes the run periods using the weather file
 !
-! Location:                Chicago, IL
-!
-! Design Days:             CHICAGO_IL_USA Annual Heating 99% Design Conditions DB, MaxDB= -17.3°C
-!                          CHICAGO_IL_USA Annual Cooling 1% Design Conditions, MaxDB=  31.5°C MCWB = 23.0°C
-!
-! Run Period (Weather File): Annual, CHICAGO_IL_USA TMY2-94846
 !
 ! Run Control:             Zone and System sizing with weather file run control and two design days run
 !
@@ -599,14 +593,18 @@
     Until: 8:00,0.0,         !- Field 3
     Until: 11:00,1.00,       !- Field 5
     Until: 12:00,0.80,       !- Field 7
-    Until: 13:00,0.40,       !- Field 9
+    Until: 13:00,0.70,       !- Field 9
     Until: 14:00,0.80,       !- Field 11
     Until: 18:00,1.00,       !- Field 13
     Until: 19:00,0.50,       !- Field 15
     Until: 21:00,0.10,       !- Field 17
     Until: 24:00,0.0,        !- Field 19
     For: Weekends WinterDesignDay Holiday, !- Field 21
-    Until: 24:00,0.0;        !- Field 22
+    Until: 10:00,0.20,
+    Until: 14:00,0.80,
+    Until: 18:00,0.30,
+    Until: 22:00,0.10,
+    Until: 24:00,0.0;
 
   Schedule:Compact,
     ShadeTransSch,           !- Name
@@ -2306,7 +2304,7 @@
     Condenser Water Loop,    !- Plant or Condenser Loop Name
     Condenser,               !- Loop Type
     29.5,                    !- Design Loop Exit Temperature {C}
-    5.5,                       !- Loop Design Temperature Difference {deltaC}
+    5,                       !- Loop Design Temperature Difference {deltaC}
     NonCoincident,           !- Sizing Option
     1,                       !- Zone Timesteps in Averaging Window
     None;                    !- Coincident Sizing Factor Mode
@@ -2798,7 +2796,7 @@
     Always On Discrete,      !- Availability Schedule Name
     0.6,                     !- Fan Total Efficiency
     300,                     !- Pressure Rise {Pa}
-    0.165,                !- Maximum Flow Rate {m3/s}
+    0.16,                !- Maximum Flow Rate {m3/s}
     0.8,                     !- Motor Efficiency
     1,                       !- Motor In Airstream Fraction
     SPACE3-1 Thermal Zone Fan Coil Unit Mixed Air Node,  !- Air Inlet Node Name
@@ -2812,7 +2810,7 @@
     Always On Discrete,      !- Availability Schedule Name
     0.6,                     !- Fan Total Efficiency
     300,                     !- Pressure Rise {Pa}
-    0.075,                !- Maximum Flow Rate {m3/s}
+    0.07,                !- Maximum Flow Rate {m3/s}
     0.8,                     !- Motor Efficiency
     1,                       !- Motor In Airstream Fraction
     SPACE4-1 Thermal Zone Fan Coil Unit Mixed Air Node,  !- Air Inlet Node Name
@@ -4744,4 +4742,3 @@
 
   Output:SQLite,
     SimpleAndTabular;        !- Option Type
-
