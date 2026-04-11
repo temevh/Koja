@@ -1,0 +1,31 @@
+=== Score: strategies/teemu_v2/eplus_out/eplusout.csv ===
+
+Energy:  elec 41651.4 kWh, gas 46038.2 kWh
+         elec 4581.66 €, gas 2762.29 €
+         energy cost = 7343.95 €
+
+CO2 penalty per space:
+        h_above_S1  h_above_S2  h_above_S3  penalty_eur
+space                                                  
+Space1           0           0           0            0
+Space2           0           0           0            0
+Space3           1           0           0            2
+Space4           2           0           0            4
+Space5           1           0           0            2
+CO2 penalty total = 8.00 €
+
+Temperature penalty per space:
+       achieved_class  h_outside_S1  h_outside_S2  h_outside_S3       S1_%  penalty_eur
+space                                                                                  
+Space1             S1             2             0             0  99.977169            2
+Space2             S1             2             0             0  99.977169            2
+Space3             S1             2             0             0  99.977169            2
+Space4             S1             2             0             0  99.977169            2
+Space5             S1             1             0             0  99.988584            1
+Temperature penalty total = 9.00 €
+
+─────────────────────────────
+Energy cost:          7343.95 €
+CO2 penalty:             8.00 €
+Temperature penalty:     9.00 €
+TOTAL COST:           7360.95 €

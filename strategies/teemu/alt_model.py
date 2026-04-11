@@ -87,58 +87,120 @@ class MyModel:
 
         heating_setpoint = controller.get_lower() + 0.03
         cooling_setpoint = max(heating_setpoint, controller.get_upper() - 0.03)
-        #print(f"heating: {heating_setpoint}, cooling: {cooling_setpoint}")
-        #supply_air_temp = 18.0
-        if zone_temp < heating_setpoint + 0.1:
-            supply_air_temp = 21.0  # Max allowed (Heat with Gas)
-        elif zone_temp > cooling_setpoint - 0.1:
-            supply_air_temp = 16.0  # Min allowed (Cooling)
-        else:
-            # Optimize neutral state: do not use Boiler to heat to 18.5 in winter if we can just supply 16.0!
 
+        # Supply air: proven configuration
+        if zone_temp < heating_setpoint + 0.1:
+            supply_air_temp = 21.0
+        elif zone_temp > cooling_setpoint - 0.1:
+            supply_air_temp = 16.0
+        else:
             supply_air_temp = float(np.clip(outdoor_temp, 16.0, 21.0))
 
 
-        if co2_concentration >= CO2_THRESHOLDS[0] - 20: # 750
-            fan_flow_rate = 1.0
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 25: # 745
-            fan_flow_rate = 0.95
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 30: # 740
+        # --- Ultra-Granular CO2 Ventilation (2 ppm steps) ---
+        # EXPERIMENT: Each flow rate bumped +0.04 vs original baseline
+        if co2_concentration >= 760:
+            fan_flow_rate = 1.00
+        elif co2_concentration >= 758:
+            fan_flow_rate = 1.00
+        elif co2_concentration >= 756:
+            fan_flow_rate = 1.00
+        elif co2_concentration >= 754:
+            fan_flow_rate = 0.98
+        elif co2_concentration >= 752:
+            fan_flow_rate = 0.96
+        elif co2_concentration >= 750:
+            fan_flow_rate = 0.94
+        elif co2_concentration >= 748:
+            fan_flow_rate = 0.92
+        elif co2_concentration >= 746:
             fan_flow_rate = 0.90
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 35: # 735
-            fan_flow_rate = 0.85
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 40: # 730
+        elif co2_concentration >= 744:
+            fan_flow_rate = 0.88
+        elif co2_concentration >= 742:
+            fan_flow_rate = 0.86
+        elif co2_concentration >= 740:
+            fan_flow_rate = 0.84
+        elif co2_concentration >= 738:
+            fan_flow_rate = 0.82
+        elif co2_concentration >= 736:
             fan_flow_rate = 0.80
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 45: # 725
-            fan_flow_rate = 0.75
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 50: # 720
+        elif co2_concentration >= 734:
+            fan_flow_rate = 0.78
+        elif co2_concentration >= 732:
+            fan_flow_rate = 0.76
+        elif co2_concentration >= 730:
+            fan_flow_rate = 0.74
+        elif co2_concentration >= 728:
+            fan_flow_rate = 0.72
+        elif co2_concentration >= 726:
             fan_flow_rate = 0.70
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 55: # 715
-            fan_flow_rate = 0.65
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 60: # 710
+        elif co2_concentration >= 724:
+            fan_flow_rate = 0.68
+        elif co2_concentration >= 722:
+            fan_flow_rate = 0.66
+        elif co2_concentration >= 720:
+            fan_flow_rate = 0.64
+        elif co2_concentration >= 718:
+            fan_flow_rate = 0.62
+        elif co2_concentration >= 716:
             fan_flow_rate = 0.60
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 65: # 705
-            fan_flow_rate = 0.55
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 70: # 700
+        elif co2_concentration >= 714:
+            fan_flow_rate = 0.58
+        elif co2_concentration >= 712:
+            fan_flow_rate = 0.56
+        elif co2_concentration >= 710:
+            fan_flow_rate = 0.54
+        elif co2_concentration >= 708:
+            fan_flow_rate = 0.52
+        elif co2_concentration >= 706:
             fan_flow_rate = 0.50
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 75: # 695
-            fan_flow_rate = 0.45
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 80: # 690
+        elif co2_concentration >= 704:
+            fan_flow_rate = 0.48
+        elif co2_concentration >= 702:
+            fan_flow_rate = 0.46
+        elif co2_concentration >= 700:
+            fan_flow_rate = 0.44
+        elif co2_concentration >= 698:
+            fan_flow_rate = 0.42
+        elif co2_concentration >= 696:
             fan_flow_rate = 0.40
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 85: # 685
-            fan_flow_rate = 0.35
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 90: # 680
+        elif co2_concentration >= 694:
+            fan_flow_rate = 0.38
+        elif co2_concentration >= 692:
+            fan_flow_rate = 0.36
+        elif co2_concentration >= 690:
+            fan_flow_rate = 0.34
+        elif co2_concentration >= 688:
+            fan_flow_rate = 0.32
+        elif co2_concentration >= 686:
             fan_flow_rate = 0.30
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 95: # 675
-            fan_flow_rate = 0.25
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 100: # 670
+        elif co2_concentration >= 684:
+            fan_flow_rate = 0.28
+        elif co2_concentration >= 682:
+            fan_flow_rate = 0.26
+        elif co2_concentration >= 680:
+            fan_flow_rate = 0.24
+        elif co2_concentration >= 676:
+            fan_flow_rate = 0.22
+        elif co2_concentration >= 672:
             fan_flow_rate = 0.20
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 110: # 660
-            fan_flow_rate = 0.15
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 120: # 650
+        elif co2_concentration >= 668:
+            fan_flow_rate = 0.18
+        elif co2_concentration >= 664:
+            fan_flow_rate = 0.16
+        elif co2_concentration >= 660:
+            fan_flow_rate = 0.14
+        elif co2_concentration >= 654:
+            fan_flow_rate = 0.12
+        elif co2_concentration >= 648:
             fan_flow_rate = 0.10
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 140: # 630
-            fan_flow_rate = 0.05
+        elif co2_concentration >= 642:
+            fan_flow_rate = 0.08
+        elif co2_concentration >= 636:
+            fan_flow_rate = 0.07
+        elif co2_concentration >= 630:
+            fan_flow_rate = 0.06
         else:
             fan_flow_rate = 0.00
 
