@@ -16,10 +16,13 @@ class TemperatureTargeter:
     def __init__(self):
         self.history = deque(maxlen=24)
         self.t = 0
+        self.prev_co2_ = 0
+        self.co2 = 0
 
-    def update(self, outdoor_temp):
+    def update(self, outdoor_temp, co2_concentration):
         self.history.append(outdoor_temp)
         self.t = sum(self.history) / len(self.history)
+        self.co2 = co2_concentration
 
     def get_lower(self):
         t = self.t
@@ -43,6 +46,12 @@ class TemperatureTargeter:
 
         return (lower + upper) / 2
     
+    def update_post(self):
+        self.prev_co2_ = self.co2
+
+    def prev_co2(self):
+        return self.prev_co2_
+    
 CO2_THRESHOLDS = [770, 970, 1220]
 
 controller = TemperatureTargeter()
@@ -50,6 +59,7 @@ controller = TemperatureTargeter()
 class MyModel:
     def __init__(self) -> None:
         self.prev_hour = 0
+        pass
     
     def calculate_setpoints(
         self,
@@ -81,7 +91,7 @@ class MyModel:
         """
 
         if hour != self.prev_hour:
-            controller.update(outdoor_temp)
+            controller.update(outdoor_temp, co2_concentration)
         self.prev_hour = hour
 
         heating_setpoint = controller.get_lower() + 0.03
@@ -98,24 +108,24 @@ class MyModel:
             supply_air_temp = float(np.clip(outdoor_temp, 16.0, 21.0))
 
 
-        if co2_concentration >= CO2_THRESHOLDS[0] - 20: # 750
-            fan_flow_rate = 1.0
+        if co2_concentration >= CO2_THRESHOLDS[0] - 15: # 750
+            fan_flow_rate = 0.96
         elif co2_concentration >= CO2_THRESHOLDS[0] - 25: # 745
-            fan_flow_rate = 0.95
+            fan_flow_rate = 0.93
         elif co2_concentration >= CO2_THRESHOLDS[0] - 30: # 740
-            fan_flow_rate = 0.90
+            fan_flow_rate = 0.87
         elif co2_concentration >= CO2_THRESHOLDS[0] - 35: # 735
-            fan_flow_rate = 0.85
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 40: # 730
             fan_flow_rate = 0.80
+        elif co2_concentration >= CO2_THRESHOLDS[0] - 40: # 730
+            fan_flow_rate = 0.79
         elif co2_concentration >= CO2_THRESHOLDS[0] - 45: # 725
             fan_flow_rate = 0.75
         elif co2_concentration >= CO2_THRESHOLDS[0] - 50: # 720
-            fan_flow_rate = 0.70
+            fan_flow_rate = 0.72
         elif co2_concentration >= CO2_THRESHOLDS[0] - 55: # 715
             fan_flow_rate = 0.65
         elif co2_concentration >= CO2_THRESHOLDS[0] - 60: # 710
-            fan_flow_rate = 0.60
+            fan_flow_rate = 0.50
         elif co2_concentration >= CO2_THRESHOLDS[0] - 65: # 705
             fan_flow_rate = 0.55
         elif co2_concentration >= CO2_THRESHOLDS[0] - 70: # 700
@@ -127,18 +137,21 @@ class MyModel:
         elif co2_concentration >= CO2_THRESHOLDS[0] - 85: # 685
             fan_flow_rate = 0.35
         elif co2_concentration >= CO2_THRESHOLDS[0] - 90: # 680
-            fan_flow_rate = 0.30
+            fan_flow_rate = 0.50
         elif co2_concentration >= CO2_THRESHOLDS[0] - 95: # 675
-            fan_flow_rate = 0.25
+            fan_flow_rate = 0.5
         elif co2_concentration >= CO2_THRESHOLDS[0] - 100: # 670
             fan_flow_rate = 0.20
         elif co2_concentration >= CO2_THRESHOLDS[0] - 110: # 660
-            fan_flow_rate = 0.15
+            fan_flow_rate = 0.40
         elif co2_concentration >= CO2_THRESHOLDS[0] - 120: # 650
-            fan_flow_rate = 0.10
-        elif co2_concentration >= CO2_THRESHOLDS[0] - 140: # 630
-            fan_flow_rate = 0.05
+            fan_flow_rate = 0.2
+        elif co2_concentration >= CO2_THRESHOLDS[0] - 250: # 630
+            fan_flow_rate = 0.0
         else:
-            fan_flow_rate = 0.00
+            fan_flow_rate = 0.0
+
+
+        controller.update_post()
 
         return heating_setpoint, cooling_setpoint, supply_air_temp, fan_flow_rate
